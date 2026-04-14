@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>Nouveau prix du carburant depuis le 1er avril 2026 : quels territoires sont les plus vulnérables ?</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+  :root{
+    --bg:#f7f5f1;--paper:#f1eee8;--ink:#1e1b17;--muted:#6f6a63;--faint:#a0849b;
+    --line:#ded5c9;--accent:#f4983b;
+    --font:'Inter',system-ui,sans-serif;
+    --serif:'Source Serif 4',Georgia,serif;
+  }
+  [data-theme="dark"]{
+    --bg:#151412;--paper:#1c1b19;--ink:#f1eee8;--muted:#a8a29e;--faint:#8b87a5;
+    --line:#3c3327;--accent:#ffb25a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:var(--font);background:var(--bg);color:var(--ink);
+    line-height:1.6;min-height:100vh;
+  }
+  main{max-width:1220px;margin:0 auto;padding:32px 16px 48px;}
+  header{padding:22px 26px 16px;background:var(--paper);border-radius:12px;border:1px solid var(--line);margin-bottom:24px;}
+  .title{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:start;}
+  .title h1{
+    font-family:var(--serif);font-weight:700;font-size:27px;letter-spacing:-0.03em;
+  }
+  .title p{font-size:14px;color:var(--muted);max-width:72ch;}
+  .tagline{margin-top:6px;font-size:12px;color:var(--faint);}
+  .cards{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:20px;}
+  @media (max-width:900px){
+    .cards{grid-template-columns:minmax(0,1fr);}
+  }
+  .card{
+    background:var(--paper);border-radius:12px;padding:14px 16px 18px;
+    border:1px solid var(--line);display:flex;flex-direction:column;gap:10px;
+  }
+  .card h2{
+    font-family:var(--serif);font-size:17px;font-weight:600;
+  }
+  .card p{font-size:13px;color:var(--muted);}
+  .chart{height:420px;width:100%;}
+  footer{
+    margin-top:26px;font-size:11px;color:var(--muted);
+  }
+  </style>
+</head>
+<body>
+<main>
+
+  <header>
+    <div class="title">
+      <div>
+        <h1>Nouveau prix du carburant depuis le 1er avril 2026 : quels territoires sont les plus vulnérables ?</h1>
+        <p>Visualisation exploratoire croisant les prix du carburant, les niveaux de pauvreté et la dépendance à la voiture pour les déplacements domicile‑travail, à l’échelle départementale et communale réunionnaise (données observées entre le 1ᵉʳ et le 11 avril 2026).</p>
+        <p class="tagline">Lecture prudente : il s’agit d’un début d’analyse destiné à faire parler les chiffres et à révéler des signaux de vulnérabilité territoriale, sans prétendre à une démonstration scientifique définitive.</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="cards">
+
+    <!-- Carte 1 : prix / pauvreté / dépendance voiture -->
+    <article class="card">
+      <h2>Croisement entre prix des carburants, taux de pauvreté et dépendance à la voiture pour les déplacements domicile‑travail</h2>
+      <p>
+        Chaque point représente un territoire où la position horizontale indique le prix du carburant, la position verticale la part des déplacements domicile‑travail en voiture, la couleur le taux de pauvreté et la taille du symbole l’intensité de cette pauvreté.
+      </p>
+      <div id="chart-prix" class="chart"></div>
+    </article>
+
+    <!-- Carte 2 : communes de La Réunion -->
+    <article class="card">
+      <h2>Communes de La Réunion : pauvreté et dépendance à la voiture</h2>
+      <p>
+        À prix identique sur toute l’île, ce nuage de points montre comment les communes se distinguent par le cumul pauvreté / dépendance automobile, certaines étant particulièrement exposées à une hausse durable des carburants.
+      </p>
+      <div id="chart-communes" class="chart"></div>
+    </article>
+
+  </section>
+
+  <footer>
+    © 2026 – Vous êtes autorisé à consulter ce site et son code source via GitHub Pages. Toute copie, modification,
+    redistribution ou réutilisation, y compris à des fins commerciales ou non commerciales, est interdite sans accord
+    écrit préalable de l’auteur.
+  </footer>
+
+</main>
+
+<script>
+// =====================
+// Données simplifiées
+// =====================
+
+// Données départements pour le croisement prix / pauvreté / voiture
+// P = taux de pauvreté (%), V = part déplacements voiture (%), S = prix SP95 €/L
+// Exemple basé sur la structure de ton fichier Excel (adapter si besoin)
+const DEPT = [
+  {D:"La Réunion",          P:36.0, V:82.3, S:1.96},
+  {D:"Martinique",          P:28.0, V:78.5, S:1.90},
+  {D:"Guadeloupe",          P:34.5, V:85.0, S:1.96},
+  {D:"Mayotte",             P:77.0, V:43.0, S:1.97},
+  {D:"Aube",                P:15.0, V:82.0, S:1.90},
+  {D:"Aveyron",             P:14.0, V:81.5, S:1.91},
+  {D:"Haute-Marne",         P:16.0, V:80.0, S:1.92},
+  {D:"Paris",               P:13.0, V:36.0, S:1.89}
+];
+
+// Données communes Réunion (exemple, à remplacer par tes vraies données si besoin)
+// P = pauvreté %, V = part déplacements voiture %, N = nom
+const COMM = [
+  {N:"Saint-Denis",   P:34, V:69},
+  {N:"Saint-Paul",    P:32, V:74},
+  {N:"Saint-Pierre",  P:31, V:73},
+  {N:"Saint-André",   P:42, V:84},
+  {N:"Saint-Benoît",  P:41, V:83},
+  {N:"Saint-Joseph",  P:40, V:82},
+  {N:"Salazie",       P:45, V:70},
+  {N:"Cilaos",        P:46, V:71}
+];
+
+// =====================
+// Graphique 1 : Prix / Voiture / Pauvreté
+// =====================
+
+const prixTrace = {
+  x: DEPT.map(d => d.S),
+  y: DEPT.map(d => d.V),
+  text: DEPT.map(d => `${d.D}<br>Pauvreté : ${d.P}%<br>SP95 : ${d.S.toFixed(2)} €/L<br>Voiture dom‑travail : ${d.V}%`),
+  mode: 'markers',
+  type: 'scatter',
+  marker: {
+    color: DEPT.map(d => d.P),
+    colorscale: 'YlOrBr',
+    cmin: Math.min(...DEPT.map(d => d.P)),
+    cmax: Math.max(...DEPT.map(d => d.P)),
+    colorbar: { title: 'Taux de pauvreté (%)' },
+    // taille proportionnelle à la pauvreté
+    size: DEPT.map(d => d.P * 0.6 + 6),
+    sizemode: 'diameter',
+    opacity: 0.9,
+    line: { width: 0.5, color: '#333' }
+  },
+  hovertemplate: '%{text}<extra></extra>'
+};
+
+const prixLayout = {
+  margin:{l:50,r:10,t:10,b:45},
+  xaxis:{
+    title:'Prix du SP95 (€/L, 1ᵉʳ–11 avril 2026)',
+    zeroline:false
+  },
+  yaxis:{
+    title:'Part des déplacements domicile‑travail en voiture (%)',
+    rangemode:'tozero'
+  },
+  showlegend:false,
+  paper_bgcolor:'rgba(0,0,0,0)',
+  plot_bgcolor:'rgba(0,0,0,0)'
+};
+
+Plotly.newPlot('chart-prix', [prixTrace], prixLayout, {responsive:true});
+
+// =====================
+// Graphique 2 : Communes de La Réunion
+// =====================
+
+const commTrace = {
+  x: COMM.map(c => c.P),
+  y: COMM.map(c => c.V),
+  text: COMM.map(c => `${c.N}<br>Pauvreté : ${c.P}%<br>Voiture dom‑travail : ${c.V}%`),
+  mode: 'markers',
+  type: 'scatter',
+  marker: {
+    color: COMM.map(c => c.P),
+    colorscale: 'YlOrBr',
+    cmin: Math.min(...COMM.map(c => c.P)),
+    cmax: Math.max(...COMM.map(c => c.P)),
+    colorbar: { title: 'Taux de pauvreté (%)' },
+    size: COMM.map(c => c.P * 0.5 + 6),
+    sizemode: 'diameter',
+    opacity: 0.9,
+    line: { width: 0.5, color: '#333' }
+  },
+  hovertemplate: '%{text}<extra></extra>'
+};
+
+const commLayout = {
+  margin:{l:50,r:10,t:10,b:45},
+  xaxis:{
+    title:'Taux de pauvreté (%)',
+    rangemode:'tozero'
+  },
+  yaxis:{
+    title:'Part des déplacements domicile‑travail en voiture (%)',
+    rangemode:'tozero'
+  },
+  showlegend:false,
+  paper_bgcolor:'rgba(0,0,0,0)',
+  plot_bgcolor:'rgba(0,0,0,0)'
+};
+
+Plotly.newPlot('chart-communes', [commTrace], commLayout, {responsive:true});
+</script>
+
+</body>
+</html>
